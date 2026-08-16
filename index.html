@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UTA MIX CONSOLE — 歌ってみた自動ミックス</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="rack">
+
+  <header class="rack-head">
+    <div class="brand">
+      <span class="brand-mark">UTA</span><span class="brand-mark accent">MIX</span>
+      <span class="brand-sub">CONSOLE</span>
+    </div>
+    <p class="brand-tagline">録音した歌声を、ブラウザだけでミックス。EQ / リバーブ / オクターブ下 / ハモリ</p>
+  </header>
+
+  <section class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" accept="audio/*" hidden>
+    <div class="drop-inner">
+      <div class="drop-meter" id="idleMeter" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <p class="drop-title" id="dropTitle">音声ファイルをドロップ、またはクリックして選択</p>
+      <p class="drop-sub" id="dropSub">wav / mp3 / m4a 対応・ブラウザ内で処理（サーバー送信なし）</p>
+    </div>
+  </section>
+
+  <section class="console" id="console" hidden>
+
+    <!-- CH.1 EQ -->
+    <article class="strip" data-ch="1">
+      <div class="strip-head"><span class="ch-no">CH.1</span><span class="ch-name">EQ</span></div>
+      <div class="strip-body">
+        <div class="fader-group">
+          <label class="fader-label">LOW <span class="unit">200Hz</span></label>
+          <input type="range" min="-12" max="12" value="0" step="0.5" id="eqLow" class="fader">
+          <span class="readout mono" id="eqLowVal">0.0 dB</span>
+        </div>
+        <div class="fader-group">
+          <label class="fader-label">MID <span class="unit">1kHz</span></label>
+          <input type="range" min="-12" max="12" value="0" step="0.5" id="eqMid" class="fader">
+          <span class="readout mono" id="eqMidVal">0.0 dB</span>
+        </div>
+        <div class="fader-group">
+          <label class="fader-label">HIGH <span class="unit">4kHz</span></label>
+          <input type="range" min="-12" max="12" value="0" step="0.5" id="eqHigh" class="fader">
+          <span class="readout mono" id="eqHighVal">0.0 dB</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- CH.2 REVERB -->
+    <article class="strip" data-ch="2">
+      <div class="strip-head"><span class="ch-no">CH.2</span><span class="ch-name">REVERB</span></div>
+      <div class="strip-body">
+        <div class="fader-group">
+          <label class="fader-label">MIX</label>
+          <input type="range" min="0" max="100" value="20" step="1" id="rvMix" class="fader">
+          <span class="readout mono" id="rvMixVal">20%</span>
+        </div>
+        <div class="fader-group">
+          <label class="fader-label">DECAY</label>
+          <input type="range" min="0.5" max="8" value="2.5" step="0.1" id="rvDecay" class="fader">
+          <span class="readout mono" id="rvDecayVal">2.5s</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- CH.3 OCTAVE DOWN -->
+    <article class="strip" data-ch="3">
+      <div class="strip-head">
+        <span class="ch-no">CH.3</span><span class="ch-name">オク下</span>
+        <label class="switch"><input type="checkbox" id="ocEnable"><span class="switch-track"></span></label>
+      </div>
+      <div class="strip-body">
+        <div class="fader-group">
+          <label class="fader-label">MIX</label>
+          <input type="range" min="0" max="100" value="35" step="1" id="ocMix" class="fader" disabled>
+          <span class="readout mono" id="ocMixVal">35%</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- CH.4 HARMONY -->
+    <article class="strip" data-ch="4">
+      <div class="strip-head">
+        <span class="ch-no">CH.4</span><span class="ch-name">ハモリ</span>
+        <label class="switch"><input type="checkbox" id="hmEnable"><span class="switch-track"></span></label>
+      </div>
+      <div class="strip-body">
+        <div class="fader-group select-group">
+          <label class="fader-label">音程</label>
+          <select id="hmInterval" class="select mono" disabled>
+            <option value="3">短3度上 (+3st)</option>
+            <option value="4" selected>長3度上 (+4st)</option>
+            <option value="7">完全5度上 (+7st)</option>
+            <option value="-5">完全4度下 (-5st)</option>
+          </select>
+        </div>
+        <div class="fader-group">
+          <label class="fader-label">MIX</label>
+          <input type="range" min="0" max="100" value="30" step="1" id="hmMix" class="fader" disabled>
+          <span class="readout mono" id="hmMixVal">30%</span>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <section class="transport" id="transport" hidden>
+    <button class="btn-process" id="processBtn">
+      <span class="btn-label">MIX DOWN</span>
+    </button>
+    <div class="progress-wrap" id="progressWrap" hidden>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <span class="progress-text mono" id="progressText">RENDERING… 0%</span>
+    </div>
+    <div class="result" id="result" hidden>
+      <audio controls id="resultAudio"></audio>
+      <a class="btn-download" id="downloadBtn" download="utamix_output.wav">↓ WAVをダウンロード</a>
+    </div>
+  </section>
+
+  <footer class="rack-foot">
+    <span class="mono">100% クライアントサイド処理 / 音声はサーバーに送信されません</span>
+  </footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script src="js/wav-encoder.js"></script>
+<script src="js/audio-engine.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
